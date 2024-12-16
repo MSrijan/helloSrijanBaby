@@ -10,64 +10,65 @@ const Login: React.FC = () => {
     password: "",
   });
 
-  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const headers = {
-    "App-Authorizer": "647061697361",
-    Accept: "application/json",
-    Origin: "http://localhost:3000",
+    'Content-Type': 'application/json',
+    'Connection': 'close',
+    'App-Authorizer': '647061697361',
+    'Origin': 'https://silk.billin.space'
   };
+  
 
   // Regex for email validation
   const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   // Regex for Nepalese phone number validation
   const phoneRegex = /^(984|986|985|980|981|982)\d{7}$/;
-  // Validate email or Nepalese phone number
+
   const validateInput = (input: string) => {
     return emailRegex.test(input) || phoneRegex.test(input);
   };
 
   const handleSubmit: FormEventHandler = (e) => {
     e.preventDefault();
-    if (validateInput(values.mobile_no)) {
-      axios
-        .post(
-          "https://api.billin.space/api/login",
-          {
-            mobile_no: values.mobile_no,
-            password: values.password,
-            fcm_token: "no_fcm",  // Add this line
-          },
-          { headers }
-        )
-        .then((res) => {
-          if (res.data) {
-            const { access_token, user } = res.data;
-            const { name, email } = user;
-            localStorage.setItem("access_token", access_token);
-            localStorage.setItem("name", name || "User");
-            localStorage.setItem("email", email || "");
 
-            toast.success("Welcome, you are logged in!"),
-              {
-                onClose: () => {
-                  navigate("/");
-                },
-              };
-          } else {
-            toast.error("Unexcpected response, Login Failed!");
-            console.error("Unexpected response", res.data);
-          }
-        })
-        .catch((error) => {
-          const errorMessage =
-            error.response?.data?.message || error.message || "Unknown error";
-          toast.error(`Login failed: ${errorMessage}`);
-        });
-    } else {
+    if (!validateInput(values.mobile_no)) {
       toast.error("Invalid Email or Phone Number");
+      return;
     }
+
+    axios
+      .post(
+        "https://api.billin.space/api/login",
+        {
+          mobile_no: '9801000000',
+          password: 'Silk@2024',
+          fcm_token: "no_fcm", // Placeholder for FCM token
+        },
+        { headers }
+      )
+      .then((res) => {
+        const { access_token, user } = res.data;
+        const { name, email } = user;
+
+        if (access_token && user) {
+          localStorage.setItem("access_token", access_token);
+          localStorage.setItem("name", name || "User");
+          localStorage.setItem("email", email || "");
+
+          toast.success("Welcome, you are logged in!", {
+            onClose: () => navigate("/"),
+          });
+        } else {
+          throw new Error("Unexpected API response");
+        }
+      })
+      .catch((error) => {
+        const errorMessage =
+          error.response?.data?.message || error.message || "Unknown error";
+        toast.error(`Login failed: ${errorMessage}`);
+      });
   };
 
   return (
@@ -104,7 +105,7 @@ const Login: React.FC = () => {
               />
               <div className="relative">
                 <input
-                  type={showPassword ? "text" : "password"} // Toggle input type
+                  type={showPassword ? "text" : "password"}
                   placeholder="Password"
                   required
                   className="p-2 rounded-full px-6 border-2 bg-page-background-color border-gray-300 w-full"
@@ -112,7 +113,6 @@ const Login: React.FC = () => {
                     setValues({ ...values, password: e.target.value })
                   }
                 />
-                {/* Toggle Password Visibility Button */}
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
@@ -121,7 +121,6 @@ const Login: React.FC = () => {
                   {showPassword ? "👁️" : "🔒"}
                 </button>
               </div>
-              {/* Login Button */}
               <button
                 className="bg-red-600 hover:bg-opacity-90 duration-300 text-white py-3 rounded-full font-medium hover:shadow-md w-full"
                 type="submit"
